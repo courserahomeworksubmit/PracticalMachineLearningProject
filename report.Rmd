@@ -48,7 +48,7 @@ dft <- read.csv ( "pml-testing.csv" )
 * All timestamps will be unused for future prediction.
 * Window number related variables will not be used for future prediction either.
 
-#### **2. Create a data partition and apply caret function on the training set with random forest method. **
+#### **2. Create a data partition and apply caret function on the training set with random forest method.**
 
 #### **3. Perform cross-validation.** 
 * Apply the model to predict the training set and check the confusion matrix.
