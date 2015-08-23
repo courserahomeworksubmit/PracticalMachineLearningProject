@@ -1,0 +1,195 @@
+---
+title: "Project for Practical Machine Learning"
+author: "the Underdog"
+date: "Aug. 22,2015"
+output: html_document
+---
+
+## Summary
+
+A training and prediction method based on random Forest method is attempted for a classification problem. Inconsequential variables may have a heavy negative impact since the data set is nicely organized and some are used only for book keeping purpose, so discarding them will be a crucial point! A cross-validation will be performed between training and prediction. Finally, prediction for the grading will be performed.
+
+## Preliminary materials
+
+### Default code chunk options and preliminary steps
+
+All R source codes to generate examples will be echoed and the document is meant to be written in English. To avoid a burden on servers (and possibly desktops on which grading is performed) code evaluation will be omitted.
+
+```{r setoptions , echo = TRUE , eval = FALSE , cache = TRUE }
+#   Default Options not displayed...
+#
+#     echo = TRUE (except for loading libraries...)
+#     eval = FALSE
+#     cache = TRUE
+#     LANG = "en_US.UTF-8"
+```
+
+Packages included are:
+```{r}
+#   Will not be echoed~
+require ( caret ) ; require ( dplyr ) ; require ( kernlab ) ; require ( randomForest )
+```
+
+The rest of the code will be attached in the appendix.
+
+### Read the datasets from files
+
+```{r}
+df0 <- read.csv ( "pml-training.csv" )
+dft <- read.csv ( "pml-testing.csv" )
+```
+
+### Steps of analysis
+
+#### **1. Identify the variables that won't affect solving this problem.**
+
+* NA only variables in the problem data set won't be used any way.
+* The first variable is the serial number, which should be discarded since the data set is organized already.
+* All timestamps will be unused for future prediction.
+* Window number related variables will not be used for future prediction either.
+
+#### **2. Create a data partition and apply caret function on the training set with random forest method.**
+
+#### **3. Perform cross-validation.** 
+* Apply the model to predict the training set and check the confusion matrix.
+* Test against testing set and see if it is good enough.
+
+#### **4. Predict on problem set and submit.**
+
+So, the last variable, which is the classifier, is the only difference.
+
+
+The following features will not affect the prediction, so will not be used while training either.
+
+## Appendix
+
+The code used for the assignment!
+
+```{r , eval = FALSE }
+################################################################################
+#
+#   Practical Machine Learning Project Assignment
+#
+#                                                           by the Underdog
+#
+#     * Assume that the data files are located in the current working directory.
+#
+################################################################################
+#
+#     * Package inclusion...
+#
+#*******************************************************************************
+#
+require ( caret ) ; require ( dplyr ) ; require ( kernlab )
+#
+################################################################################
+#
+#     * Read data set from files...
+#
+#*******************************************************************************
+#
+df0 <- read.csv ( "pml-training.csv" )
+dft <- read.csv ( "pml-testing.csv" )
+#
+################################################################################
+#
+#     * Preliminary analysis
+#       to identify variables to be discarded!
+#
+#*******************************************************************************
+#
+L0 <- nrow ( df0 ) ; L1 <- nrow ( dft )
+a0 <- names ( df0 ) ; a1 <- names ( dft )
+M0 <- length ( a0 ) ; M1 <- length ( a1 )
+b0 <- rep ( FALSE , M0 ) ; d0 <- rep ( FALSE , M0 )
+b1 <- rep ( FALSE , M1 ) ; d1 <- rep ( FALSE , M1 )
+#
+#*******************************************************************************
+#
+for ( k in 1:M1 )
+{
+  if ( sum ( is.na ( dft [[ k ]] ) ) == L1 )
+  {
+    b1 [ k ] <- TRUE
+  }
+  else
+  {
+    if ( sum ( df0 [[ k ]] == "" ) == L1 ) 
+    {
+      b1 [ k ] <- TRUE
+      d1 [ k ] <- TRUE
+    }
+  }
+}
+#
+#*******************************************************************************
+#
+#     * Features to be thrown away
+#     * The first column is the serial number, and
+#       user_name along with timestamp/window-related variables should be discarded
+#       as was suggested by community ta in course community board.
+#
+#*******************************************************************************
+#
+e1 <- which ( b1 )
+e1 <- c ( grep ( "X" , a0 ) , e1 )
+e1 <- c ( grep ( "user_name" , a0 ) , e1 )
+e1 <- c ( grep ( "stamp" , a0 ) , e1 )
+e1 <- c ( grep ( "window" , a0 ) , e1 )
+#
+#*******************************************************************************
+#
+#     * Prepare for training
+#
+#*******************************************************************************
+#
+inTrain <- createDataPartition ( y = df0$classe , p = 0.25 , list = FALSE )
+
+df02 <- df01 [ inTrain , ]
+df08 <- df01 [ -inTrain , ]
+
+modelFit <- train ( classe ~ . , data = df02 , method = "rf" )
+#
+################################################################################
+#
+#     * Doublecheck the training set.
+test1 <- predict ( modelFit , df02 )
+confusionMatrix ( test1 , df02$classe )
+#
+#*******************************************************************************
+#
+#     * Cross-validation
+#
+test2 <- predict ( modelFit , df08 )
+confusionMatrix ( test2 , df08$classe )
+#
+#*******************************************************************************
+#
+#     * Predict with the model and prepare for submission.
+#
+#*******************************************************************************
+#
+answers <- predict ( modelFit , dft )
+#
+#*******************************************************************************
+#
+#     * Code provided by the assignment.
+#
+#*******************************************************************************
+#
+pml_write_files = function(x){
+  n = length ( x )
+  for(i in 1:n ) {
+    filename = paste0 ( "problem_id_" , i , ".txt" )
+    write.table ( x [ i ], file = filename , quote = FALSE , row.names = FALSE , col.names = FALSE )
+  }
+}
+
+pml_write_files(answers)
+
+################################################################################
+#
+#     * Done after manual submission!
+#
+################################################################################
+```
